@@ -1,105 +1,96 @@
-# 2025年3月实践课程 - 音乐社区第一天
+# music_tttaaayyyx - 音乐社区项目
 
 ## 项目简介
 
-这是一个基于Android开发的音乐社区应用，为用户提供音乐播放、播放列表管理、音乐发现等功能。项目采用现代化的Android开发技术栈，实现了完整的音乐社区功能。
+本项目是2025年6月实践课程-音乐社区第一天的实践项目，实现了一个Android音乐社区应用。
 
-## 项目名称
+## 项目要求
 
-- 项目名称：music_tayx
-- 包名：com.example.music_tayx
-- 应用名称：音乐社区
+## 功能实现
 
-## 主要功能
+### 闪屏页
+1. 用户第一次启动app时显示隐私内容，后续再次打开app将不再显示隐私内容了；状态保存在本地
+2. 卸载或者清除本地数据后，会重复步骤1
+3. 点击同意并使用，进入app首页，点击不同意，退出app
+4. 用户协议和隐私协议，点击"用户协议"跳转到浏览器并打开"https://www.mi.com"，点击"隐私协议"跳转到浏览器并打开"https://www.xiaomiev.com/"
+5. 通过Activity转场动画，闪屏页自然过渡到首页，动画自由发挥
 
-### 1. 音乐播放
-- 支持音乐播放、暂停、继续、停止
-- 支持上一首、下一首切换
-- 支持随机播放和循环播放
-- 播放状态管理
+### 音乐首页
+1. 首页主页面包含以下类型：banner、横滑大卡、一行一列、一行两列
+   - banner只有一张图片时，不可滑动
+   - banner有多张图片时，可左右滑动，左右滑动可循环；可自动轮播；滑动效果可参考网易云音乐-推荐-banner
+   - 每次滑动后，更新指示器的位置和状态
+2. 首页支持下拉刷新和上拉加载更多
+3. 类型可参考接口文档中的style、moduleName对应具体设计稿类型
+4. 包含歌曲封面图、歌曲名称、歌手名称
+5. 每个Item有个+号，点击弹出Toast：将音乐名称添加到音乐列表
+6. 点击Item弹出Toast：音乐名称
+7. 服务端没有返回模块名称，参考设计稿本地写死即可，我的歌曲是从mi端口获取的
 
-### 2. 播放列表管理
-- 创建和管理个人播放列表
-- 添加/移除音乐到播放列表
-- 播放列表的公开/私有设置
-- 播放列表音乐数量统计
+## 技术特性
 
-### 3. 音乐发现
-- 音乐搜索功能（按标题、艺术家、专辑）
-- 推荐音乐展示
-- 热门音乐排行
-- 音乐收藏功能
-
-### 4. 数据管理
-- 音乐数据管理
-- 播放列表数据管理
-- 收藏音乐管理
-- 播放次数统计
+- **网络请求**: 使用Retrofit2 + OkHttp3进行网络请求
+- **图片加载**: 使用Glide加载网络图片
+- **下拉刷新**: 使用SwipeRefreshLayout实现下拉刷新
+- **音乐播放**: 使用MediaPlayer实现音频播放
+- **布局适配**: 支持多种布局类型（Banner、横滑、单列、双列）
+- **状态管理**: 本地SharedPreferences保存用户隐私协议状态
 
 ## 项目结构
 
 ```
-app/src/main/java/com/example/music_tayx/
-├── MainActivity.java          # 主Activity
-├── Music.java                 # 音乐数据模型
-├── Playlist.java              # 播放列表数据模型
-├── MusicPlayer.java           # 音乐播放器管理（单例模式）
-└── MusicDataManager.java      # 音乐数据管理（单例模式）
+music_tttaaayyyx/
+├── app/
+│   ├── src/main/
+│   │   ├── java/com/example/music_tttaaayyyx/
+│   │   │   ├── adapter/          # 适配器类
+│   │   │   ├── network/          # 网络请求相关
+│   │   │   ├── MainActivity.java # 主页面
+│   │   │   ├── SplashActivity.java # 闪屏页
+│   │   │   ├── AgreementActivity.java # 用户协议页
+│   │   │   ├── MusicPlayer.java  # 音乐播放器
+│   │   │   └── ...
+│   │   └── res/
+│   │       ├── layout/           # 布局文件
+│   │       ├── drawable/         # 图标资源
+│   │       └── values/           # 资源文件
+│   └── build.gradle.kts          # 应用级构建配置
+├── gradle/                       # Gradle配置
+├── build.gradle.kts              # 项目级构建配置
+└── README.md                     # 项目说明
 ```
 
-## 设计模式应用
+## 运行说明
 
-### 1. 单例模式
-- `MusicPlayer`：全局唯一的音乐播放器实例
-- `MusicDataManager`：全局唯一的数据管理器实例
-
-### 2. 数据模型设计
-- `Music`：音乐实体类，包含音乐的基本信息
-- `Playlist`：播放列表实体类，支持音乐列表管理
-
-## 技术特点
-
-- **现代化架构**：使用ViewBinding进行视图绑定
-- **单例模式**：确保全局唯一实例，避免资源浪费
-- **数据封装**：良好的数据模型设计，支持扩展
-- **中文界面**：完全中文化的用户界面
-- **示例数据**：内置丰富的示例音乐数据
-
-## 示例数据
-
-项目内置了8首周杰伦的经典歌曲作为示例数据：
-- 夜曲、稻香、青花瓷、告白气球
-- 晴天、七里香、简单爱、双截棍
-
-## 开发环境
-
-- Android Studio Hedgehog | 2023.1.1
-- Android SDK 35
-- Java 11
-- Gradle 8.4
-
-## 构建和运行
-
-1. 克隆项目到本地
-2. 使用Android Studio打开项目
+1. 使用Android Studio打开项目
+2. 确保已安装Android SDK 31+
 3. 同步Gradle依赖
 4. 连接Android设备或启动模拟器
 5. 点击运行按钮
 
-## 项目特色
+## 开发环境
 
-- **音乐社区概念**：不仅仅是音乐播放器，更是一个音乐社交平台
-- **完整的数据模型**：支持音乐、播放列表、收藏等完整功能
-- **可扩展架构**：易于添加新功能和集成第三方音乐服务
-- **用户体验优先**：简洁直观的界面设计
+- Android Studio Hedgehog | 2023.1.1
+- Android SDK 31+
+- Java 11
+- Gradle 8.9.2
 
-## 后续开发计划
+## 依赖库
 
-- 添加用户系统
-- 集成真实的音乐API
-- 添加音乐评论功能
-- 实现音乐分享功能
-- 添加音乐推荐算法
+- androidx.appcompat:appcompat:1.7.0
+- com.google.android.material:material:1.12.0
+- androidx.constraintlayout:constraintlayout:2.2.1
+- retrofit2:retrofit:2.9.0
+- com.github.bumptech.glide:glide:4.16.0
+- androidx.swiperefreshlayout:swiperefreshlayout:1.1.0
+
+## 提交记录
+
+- 2025-06-28: 完成音乐社区第一天实践项目
+  - 实现闪屏页和隐私协议功能
+  - 实现音乐首页多种布局类型
+  - 实现音乐播放功能
+  - 实现下拉刷新和上拉加载
 
 ---
 
