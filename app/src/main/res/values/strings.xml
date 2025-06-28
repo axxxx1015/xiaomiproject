@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">音乐社区</string>
+    <string name="app_subtitle">听你所爱</string>
+    <string name="app_logo">应用图标</string>
+    <string name="action_settings">设置</string>
+    
+    <!-- 用户协议页面 -->
+    <string name="agreement_title">声明与条款</string>
+    <string name="agreement_content">欢迎使用音乐社区！我们将保护您的用户信息隐私，并提供用户协议和隐私政策的链接。请仔细阅读相关条款。</string>
+    <string name="user_agreement">用户协议</string>
+    <string name="privacy_agreement">隐私协议</string>
+    <string name="btn_agree">同意并使用</string>
+    <string name="btn_exit">退出</string>
+    
+    <!-- 主界面 -->
+    <string name="search_icon">搜索图标</string>
+    <string name="search_hint">搜索音乐、歌手、专辑</string>
+    <string name="banner_image">轮播图</string>
+    <string name="exclusive_songs">专属好歌</string>
+    <string name="exclusive_cover">专属歌曲封面</string>
+    <string name="exclusive_song_title">臣妾为止</string>
+    <string name="exclusive_song_artist">未知歌手</string>
+    <string name="daily_recommend">每日推荐</string>
+    <string name="daily_cover">每日推荐封面</string>
+    <string name="daily_song_title">未知歌曲</string>
+    <string name="daily_song_artist">汪峰</string>
+    <string name="hot_songs">热门金曲</string>
+    <string name="hot_song_1_cover">热门歌曲1封面</string>
+    <string name="hot_song_1_title">Why Would</string>
+    <string name="hot_song_1_artist">Kimi</string>
+    <string name="hot_song_2_cover">热门歌曲2封面</string>
+    <string name="hot_song_2_title">青花瓷</string>
+    <string name="hot_song_2_artist">周杰伦</string>
+    <string name="play_button">播放按钮</string>
+    <string name="add_to_playlist">添加到播放列表</string>
+    <string name="music_cover">音乐封面</string>
+    
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">首页</string>
+    <string name="second_fragment_label">发现</string>
+    <string name="next">下一个</string>
+    <string name="previous">上一个</string>
+
+    <string name="lorem_ipsum">
+        欢迎来到音乐社区！这里是一个充满音乐魅力的地方，您可以发现新的音乐，分享您的音乐品味，与志同道合的音乐爱好者交流。在这里，音乐不仅仅是听觉的享受，更是一种生活方式的表达。
+        
+        我们的社区致力于为音乐爱好者提供一个开放、友好的交流平台。无论您是古典音乐的忠实粉丝，还是流行音乐的狂热追随者，亦或是独立音乐的探索者，这里都有属于您的一片天地。
+        
+        在这里，您可以：
+        • 发现最新的音乐作品
+        • 分享您的音乐推荐
+        • 参与音乐讨论
+        • 创建您的音乐播放列表
+        • 关注您喜欢的音乐人
+        
+        让我们一起在音乐的海洋中遨游，感受音乐带来的无限魅力！
+    </string>
+</resources>

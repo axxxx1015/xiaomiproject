@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="purple_500">#FF6200EE</color>
+
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    
+    <!-- 音乐社区应用颜色 -->
+    <color name="gray">#FF666666</color>
+    <color name="light_gray">#FFF5F5F5</color>
+    <color name="background_color">#FFF8F9FA</color>
+    <color name="placeholder_color">#FFE0E0E0</color>
+    <color name="primary_color">#FF1DB954</color>
+    <color name="secondary_color">#FF191414</color>
+    <color name="blue">#FF2196F3</color>
+</resources>

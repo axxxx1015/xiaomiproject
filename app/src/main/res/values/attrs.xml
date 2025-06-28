@@ -1,0 +1,6 @@
+<resources>
+    <declare-styleable name="TagCloudView">
+        <attr name="tagHorizontalPadding" format="dimension" />
+        <attr name="tagVerticalPadding" format="dimension" />
+    </declare-styleable>
+</resources> 
