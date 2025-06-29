@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <!-- 唱片封面 -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="280dp"
+        android:layout_height="280dp"
+        android:layout_marginBottom="32dp"
+        app:cardCornerRadius="140dp"
+        app:cardElevation="8dp"
+        app:cardUseCompatPadding="true">
+
+        <ImageView
+            android:id="@+id/iv_album_cover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/album_cover"
+            android:src="@drawable/placeholder_music"
+            android:scaleType="centerCrop" />
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- 歌曲信息 -->
+    <TextView
+        android:id="@+id/tv_song_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:text="歌曲名称"
+        android:textColor="@color/black"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tv_artist_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="歌手名称"
+        android:textColor="@color/gray"
+        android:textSize="16sp" />
+
+</LinearLayout> 

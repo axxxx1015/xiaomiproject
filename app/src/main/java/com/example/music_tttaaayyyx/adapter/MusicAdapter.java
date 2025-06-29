@@ -45,7 +45,7 @@ public class MusicAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         HomePageResponse.HomePageInfo info = homePageData.get(position);
         int style = info.getStyle();
         
-        // 只有热门金曲使用双列布局
+        // 热门金曲使用双列布局
         if (style == 4) {
             return TYPE_TWO_COLUMN;
         }

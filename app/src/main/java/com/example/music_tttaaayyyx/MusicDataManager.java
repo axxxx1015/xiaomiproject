@@ -1,5 +1,7 @@
 package com.example.music_tttaaayyyx;
 
+import com.example.music_tttaaayyyx.network.HomePageResponse;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,14 +29,14 @@ public class MusicDataManager {
     // 初始化示例数据
     private void initializeSampleData() {
         // 添加示例音乐
-        allMusic.add(new Music("1", "夜曲", "周杰伦", "十一月的萧邦", "3:45", "", ""));
-        allMusic.add(new Music("2", "稻香", "周杰伦", "魔杰座", "3:42", "", ""));
-        allMusic.add(new Music("3", "青花瓷", "周杰伦", "我很忙", "3:59", "", ""));
-        allMusic.add(new Music("4", "告白气球", "周杰伦", "周杰伦的床边故事", "3:35", "", ""));
-        allMusic.add(new Music("5", "晴天", "周杰伦", "叶惠美", "4:29", "", ""));
-        allMusic.add(new Music("6", "七里香", "周杰伦", "七里香", "4:59", "", ""));
-        allMusic.add(new Music("7", "简单爱", "周杰伦", "范特西", "4:30", "", ""));
-        allMusic.add(new Music("8", "双截棍", "周杰伦", "范特西", "3:20", "", ""));
+        allMusic.add(new Music("1", "夜曲", "周杰伦", "十一月的萧邦", "3:45", "", "", ""));
+        allMusic.add(new Music("2", "稻香", "周杰伦", "魔杰座", "3:42", "", "", ""));
+        allMusic.add(new Music("3", "青花瓷", "周杰伦", "我很忙", "3:59", "", "", ""));
+        allMusic.add(new Music("4", "告白气球", "周杰伦", "周杰伦的床边故事", "3:35", "", "", ""));
+        allMusic.add(new Music("5", "晴天", "周杰伦", "叶惠美", "4:29", "", "", ""));
+        allMusic.add(new Music("6", "七里香", "周杰伦", "七里香", "4:59", "", "", ""));
+        allMusic.add(new Music("7", "简单爱", "周杰伦", "范特西", "4:30", "", "", ""));
+        allMusic.add(new Music("8", "双截棍", "周杰伦", "范特西", "3:20", "", "", ""));
 
         // 创建示例播放列表
         Playlist playlist1 = new Playlist("1", "我的最爱", "我最喜欢的音乐", "");
@@ -49,6 +51,49 @@ public class MusicDataManager {
 
         userPlaylists.add(playlist1);
         userPlaylists.add(playlist2);
+    }
+
+    /**
+     * 从网络响应创建Music对象列表
+     * @param response 网络响应数据
+     * @return Music对象列表
+     */
+    public List<Music> createMusicFromResponse(HomePageResponse response) {
+        List<Music> musicList = new ArrayList<>();
+        
+        if (response != null && response.getData() != null && response.getData().getRecords() != null) {
+            for (HomePageResponse.HomePageInfo module : response.getData().getRecords()) {
+                if (module.getMusicInfoList() != null) {
+                    for (HomePageResponse.MusicInfo musicInfo : module.getMusicInfoList()) {
+                        Music music = new Music(
+                            String.valueOf(musicInfo.getId()),
+                            musicInfo.getMusicName(),
+                            musicInfo.getAuthor(),
+                            "", // 专辑信息暂时为空
+                            "", // 时长信息暂时为空
+                            musicInfo.getCoverUrl(),
+                            musicInfo.getMusicUrl(),
+                            musicInfo.getLyricUrl()
+                        );
+                        musicList.add(music);
+                    }
+                }
+            }
+        }
+        
+        return musicList;
+    }
+
+    /**
+     * 更新音乐数据（从网络获取）
+     * @param response 网络响应数据
+     */
+    public void updateMusicFromNetwork(HomePageResponse response) {
+        List<Music> networkMusic = createMusicFromResponse(response);
+        if (!networkMusic.isEmpty()) {
+            allMusic.clear();
+            allMusic.addAll(networkMusic);
+        }
     }
 
     // 获取所有音乐

@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.util.Log;
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 
 public class MusicPlayer {
     private static final String TAG = "MusicPlayer";
@@ -14,12 +15,12 @@ public class MusicPlayer {
     private Music currentMusic;
     private int currentIndex;
     private boolean isPlaying;
-    private boolean isShuffle;
-    private boolean isRepeat;
+    private int playMode = 0; // 0: 顺序播放, 1: 单曲循环, 2: 随机播放
     
     private MediaPlayer mediaPlayer;
     private Context context;
     private OnPlaybackStateChangeListener playbackListener;
+    private Random random = new Random();
 
     public interface OnPlaybackStateChangeListener {
         void onPlaybackStateChanged(boolean isPlaying);
@@ -29,8 +30,6 @@ public class MusicPlayer {
     private MusicPlayer() {
         this.currentIndex = 0;
         this.isPlaying = false;
-        this.isShuffle = false;
-        this.isRepeat = false;
         this.mediaPlayer = new MediaPlayer();
         setupMediaPlayer();
     }
@@ -55,17 +54,8 @@ public class MusicPlayer {
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                // 播放完成后自动播放下一首
-                if (isRepeat) {
-                    // 单曲循环
-                    play(currentMusic);
-                } else if (currentPlaylist != null && !currentPlaylist.isEmpty()) {
-                    // 播放下一首
-                    next();
-                } else {
-                    // 停止播放
-                    stop();
-                }
+                // 播放完成后根据播放模式处理
+                handlePlaybackCompletion();
             }
         });
 
@@ -80,6 +70,45 @@ public class MusicPlayer {
                 return true;
             }
         });
+    }
+    
+    private void handlePlaybackCompletion() {
+        if (currentPlaylist == null || currentPlaylist.isEmpty()) {
+            stop();
+            return;
+        }
+        
+        switch (playMode) {
+            case 0: // 顺序播放
+                if (currentIndex < currentPlaylist.size() - 1) {
+                    currentIndex++;
+                } else {
+                    currentIndex = 0; // 循环到第一首
+                }
+                break;
+            case 1: // 单曲循环
+                // 继续播放当前歌曲
+                break;
+            case 2: // 随机播放
+                currentIndex = generateRandomIndex();
+                break;
+        }
+        
+        if (currentIndex < currentPlaylist.size()) {
+            currentMusic = currentPlaylist.get(currentIndex);
+            play(currentMusic);
+        }
+    }
+    
+    private int generateRandomIndex() {
+        if (currentPlaylist.size() <= 1) return 0;
+        
+        int newIndex;
+        do {
+            newIndex = random.nextInt(currentPlaylist.size());
+        } while (newIndex == currentIndex && currentPlaylist.size() > 1);
+        
+        return newIndex;
     }
 
     // 播放音乐
@@ -173,7 +202,19 @@ public class MusicPlayer {
     // 播放下一首
     public void next() {
         if (currentPlaylist != null && !currentPlaylist.isEmpty()) {
-            currentIndex = (currentIndex + 1) % currentPlaylist.size();
+            switch (playMode) {
+                case 0: // 顺序播放
+                case 1: // 单曲循环
+                    if (currentIndex < currentPlaylist.size() - 1) {
+                        currentIndex++;
+                    } else {
+                        currentIndex = 0;
+                    }
+                    break;
+                case 2: // 随机播放
+                    currentIndex = generateRandomIndex();
+                    break;
+            }
             currentMusic = currentPlaylist.get(currentIndex);
             play(currentMusic);
         }
@@ -182,7 +223,19 @@ public class MusicPlayer {
     // 播放上一首
     public void previous() {
         if (currentPlaylist != null && !currentPlaylist.isEmpty()) {
-            currentIndex = (currentIndex - 1 + currentPlaylist.size()) % currentPlaylist.size();
+            switch (playMode) {
+                case 0: // 顺序播放
+                case 1: // 单曲循环
+                    if (currentIndex > 0) {
+                        currentIndex--;
+                    } else {
+                        currentIndex = currentPlaylist.size() - 1;
+                    }
+                    break;
+                case 2: // 随机播放
+                    currentIndex = generateRandomIndex();
+                    break;
+            }
             currentMusic = currentPlaylist.get(currentIndex);
             play(currentMusic);
         }
@@ -197,16 +250,10 @@ public class MusicPlayer {
         }
     }
 
-    // 切换随机播放
-    public void toggleShuffle() {
-        this.isShuffle = !this.isShuffle;
-        Log.i(TAG, "随机播放: " + (isShuffle ? "开启" : "关闭"));
-    }
-
-    // 切换循环播放
-    public void toggleRepeat() {
-        this.isRepeat = !this.isRepeat;
-        Log.i(TAG, "循环播放: " + (isRepeat ? "开启" : "关闭"));
+    // 设置播放模式
+    public void setPlayMode(int mode) {
+        this.playMode = mode;
+        Log.i(TAG, "播放模式设置为: " + mode);
     }
 
     // 获取当前播放位置
@@ -235,10 +282,9 @@ public class MusicPlayer {
     // Getters
     public Music getCurrentMusic() { return currentMusic; }
     public boolean isPlaying() { return isPlaying; }
-    public boolean isShuffle() { return isShuffle; }
-    public boolean isRepeat() { return isRepeat; }
     public int getCurrentIndex() { return currentIndex; }
     public List<Music> getCurrentPlaylist() { return currentPlaylist; }
+    public int getPlayMode() { return playMode; }
 
     // 获取播放状态信息
     public String getStatus() {

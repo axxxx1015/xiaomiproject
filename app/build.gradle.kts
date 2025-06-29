@@ -56,6 +56,9 @@ dependencies {
     // 下拉刷新
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     
+    // Palette - 图片主题色提取
+    implementation("androidx.palette:palette:1.0.0")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

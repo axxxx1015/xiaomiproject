@@ -36,6 +36,19 @@
     <string name="add_to_playlist">添加到播放列表</string>
     <string name="music_cover">音乐封面</string>
     
+    <!-- 音乐播放页面 -->
+    <string name="close">关闭</string>
+    <string name="play_mode">播放模式</string>
+    <string name="play_pause">播放/暂停</string>
+    <string name="more">更多</string>
+    <string name="switch_view">切换视图</string>
+    <string name="favorite">收藏</string>
+    <string name="album_cover">专辑封面</string>
+    <string name="lyrics">歌词</string>
+    <string name="cover_view">封面视图</string>
+    <string name="lyrics_view">歌词视图</string>
+    <string name="swipe_hint">左右滑动切换视图</string>
+    
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">首页</string>
     <string name="second_fragment_label">发现</string>

@@ -8,6 +8,7 @@ public class Music {
     private String duration;
     private String coverUrl;
     private String audioUrl;
+    private String lyricUrl;
     private int playCount;
     private boolean isLiked;
 
@@ -19,6 +20,19 @@ public class Music {
         this.duration = duration;
         this.coverUrl = coverUrl;
         this.audioUrl = audioUrl;
+        this.playCount = 0;
+        this.isLiked = false;
+    }
+
+    public Music(String id, String title, String artist, String album, String duration, String coverUrl, String audioUrl, String lyricUrl) {
+        this.id = id;
+        this.title = title;
+        this.artist = artist;
+        this.album = album;
+        this.duration = duration;
+        this.coverUrl = coverUrl;
+        this.audioUrl = audioUrl;
+        this.lyricUrl = lyricUrl;
         this.playCount = 0;
         this.isLiked = false;
     }
@@ -45,6 +59,9 @@ public class Music {
     public String getAudioUrl() { return audioUrl; }
     public void setAudioUrl(String audioUrl) { this.audioUrl = audioUrl; }
 
+    public String getLyricUrl() { return lyricUrl; }
+    public void setLyricUrl(String lyricUrl) { this.lyricUrl = lyricUrl; }
+
     public int getPlayCount() { return playCount; }
     public void setPlayCount(int playCount) { this.playCount = playCount; }
 
@@ -59,6 +76,7 @@ public class Music {
                 ", artist='" + artist + '\'' +
                 ", album='" + album + '\'' +
                 ", duration='" + duration + '\'' +
+                ", lyricUrl='" + lyricUrl + '\'' +
                 ", playCount=" + playCount +
                 ", isLiked=" + isLiked +
                 '}';

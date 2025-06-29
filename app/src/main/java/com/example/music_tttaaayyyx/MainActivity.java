@@ -1,5 +1,6 @@
 package com.example.music_tttaaayyyx;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -167,6 +168,22 @@ public class MainActivity extends AppCompatActivity {
                 playNext();
             }
         });
+        
+        // 播放控制栏点击事件 - 跳转到音乐播放页面
+        findViewById(R.id.player_control_bar).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MusicPlayer player = MusicPlayer.getInstance();
+                if (player.getCurrentMusic() != null) {
+                    // 跳转到音乐播放页面
+                    Intent intent = new Intent(MainActivity.this, MusicPlayerActivity.class);
+                    intent.putExtra("current_index", player.getCurrentIndex());
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(MainActivity.this, "请先选择一首音乐", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void setupBannerAutoScroll() {
@@ -293,6 +310,28 @@ public class MainActivity extends AppCompatActivity {
         // 将网络数据转换为本地Music对象
         Music localMusic = convertToLocalMusic(music);
         
+        // 获取当前模块的所有音乐作为播放列表
+        List<Music> currentModuleMusic = new ArrayList<>();
+        for (HomePageResponse.HomePageInfo module : homePageData) {
+            if (module.getMusicInfoList() != null) {
+                for (HomePageResponse.MusicInfo moduleMusic : module.getMusicInfoList()) {
+                    currentModuleMusic.add(convertToLocalMusic(moduleMusic));
+                }
+            }
+        }
+        
+        // 设置播放列表
+        MusicPlayer.getInstance().setPlaylist(currentModuleMusic);
+        
+        // 找到当前音乐在播放列表中的索引
+        int currentIndex = 0;
+        for (int i = 0; i < currentModuleMusic.size(); i++) {
+            if (currentModuleMusic.get(i).getId().equals(localMusic.getId())) {
+                currentIndex = i;
+                break;
+            }
+        }
+        
         // 立即更新播放控制栏UI（在主线程）
         runOnUiThread(new Runnable() {
             @Override
@@ -320,6 +359,11 @@ public class MainActivity extends AppCompatActivity {
         
         // 增加播放次数
         MusicDataManager.getInstance().incrementPlayCount(localMusic);
+        
+        // 跳转到音乐播放页面
+        Intent intent = new Intent(MainActivity.this, MusicPlayerActivity.class);
+        intent.putExtra("current_index", currentIndex);
+        startActivity(intent);
     }
 
     private void togglePlayPause() {
@@ -391,7 +435,8 @@ public class MainActivity extends AppCompatActivity {
             "未知专辑", // 网络数据中没有专辑信息
             "0:00",    // 网络数据中没有时长信息
             music.getCoverUrl(),
-            audioUrl
+            audioUrl,
+            music.getLyricUrl() // 添加歌词URL
         );
     }
 
