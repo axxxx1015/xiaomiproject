@@ -121,7 +121,8 @@
                 android:layout_marginEnd="16dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/previous"
-                android:src="@drawable/ic_previous" />
+                android:src="@drawable/ic_previous"
+                android:tint="@color/primary_color" />
 
             <ImageButton
                 android:id="@+id/btn_play_pause"
@@ -129,7 +130,8 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/play_pause"
-                android:src="@drawable/ic_play" />
+                android:src="@drawable/ic_play"
+                android:tint="@color/primary_color" />
 
             <ImageButton
                 android:id="@+id/btn_next"
@@ -139,7 +141,8 @@
                 android:layout_marginEnd="16dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/next"
-                android:src="@drawable/ic_next" />
+                android:src="@drawable/ic_next"
+                android:tint="@color/primary_color" />
 
             <ImageButton
                 android:id="@+id/btn_more"
@@ -166,7 +169,8 @@
                 android:layout_marginEnd="32dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/switch_view"
-                android:src="@drawable/ic_other" />
+                android:src="@drawable/ic_other"
+                android:padding="8dp" />
 
             <ImageButton
                 android:id="@+id/btn_favorite"
@@ -174,7 +178,8 @@
                 android:layout_height="48dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/favorite"
-                android:src="@drawable/ic_add" />
+                android:src="@drawable/ic_add"
+                android:padding="8dp" />
 
         </LinearLayout>
 
