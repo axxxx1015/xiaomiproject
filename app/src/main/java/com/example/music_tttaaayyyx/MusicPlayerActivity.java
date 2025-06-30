@@ -232,7 +232,7 @@ public class MusicPlayerActivity extends AppCompatActivity {
     
     private void loadDataFromIntent() {
         Intent intent = getIntent();
-        if (intent != null) {
+        if (intent != null && musicPlayer != null) {
             currentIndex = intent.getIntExtra("current_index", 0);
             // 从MusicPlayer获取播放列表
             playlist = musicPlayer.getCurrentPlaylist();

@@ -394,6 +394,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void playMusic(HomePageResponse.MusicInfo music) {
+        if (music == null) {
+            Toast.makeText(this, "音乐数据异常，无法播放", Toast.LENGTH_SHORT).show();
+            return;
+        }
         // 将网络数据转换为本地Music对象
         Music localMusic = convertToLocalMusic(music);
         
