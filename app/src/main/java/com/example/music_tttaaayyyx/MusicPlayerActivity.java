@@ -9,6 +9,8 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.MotionEvent;
+import android.view.GestureDetector;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -20,11 +22,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.palette.graphics.Palette;
 import androidx.viewpager2.widget.ViewPager2;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.example.music_tttaaayyyx.adapter.MusicPlayerPagerAdapter;
+import com.example.music_tttaaayyyx.adapter.PlaylistDialogAdapter;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +70,11 @@ public class MusicPlayerActivity extends AppCompatActivity {
         R.drawable.ic_shuffle     // 随机播放
     };
     
+    private float downY = 0;
+    private float translationY = 0;
+    private GestureDetector gestureDetector;
+    private boolean isSliding = false;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,6 +85,56 @@ public class MusicPlayerActivity extends AppCompatActivity {
         setupMusicPlayer();
         setupViewPager();
         loadDataFromIntent();
+        
+        // 滑动关闭手势
+        gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                if (e1 == null || e2 == null) return false;
+                float deltaY = e2.getRawY() - downY;
+                if (deltaY > 0) { // 只允许下滑
+                    rootLayout.setTranslationY(deltaY);
+                    isSliding = true;
+                }
+                return true;
+            }
+        });
+        rootLayout.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        downY = event.getRawY();
+                        translationY = 0;
+                        isSliding = false;
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        gestureDetector.onTouchEvent(event);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        if (isSliding) {
+                            float finalY = rootLayout.getTranslationY();
+                            if (finalY > rootLayout.getHeight() / 4) {
+                                // 滑动超过1/4屏，关闭
+                                rootLayout.animate().translationY(rootLayout.getHeight()).setDuration(200).withEndAction(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        finish();
+                                        overridePendingTransition(0, android.R.anim.fade_out);
+                                    }
+                                }).start();
+                            } else {
+                                // 回弹
+                                rootLayout.animate().translationY(0).setDuration(200).start();
+                            }
+                        }
+                        isSliding = false;
+                        break;
+                }
+                return isSliding;
+            }
+        });
     }
     
     private void initViews() {
@@ -117,6 +177,8 @@ public class MusicPlayerActivity extends AppCompatActivity {
         btnSwitchView.setOnClickListener(v -> switchView());
         
         btnFavorite.setOnClickListener(v -> toggleFavorite());
+        
+        btnPlayMode.setOnLongClickListener(v -> { showPlaylistDialog(); return true; });
         
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -294,10 +356,49 @@ public class MusicPlayerActivity extends AppCompatActivity {
     }
     
     private void toggleFavorite() {
-        isFavorite = !isFavorite;
-        // 这里可以更新收藏状态
-        String message = isFavorite ? "已收藏" : "取消收藏";
-        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+        if (playlist == null || playlist.isEmpty() || currentIndex < 0 || currentIndex >= playlist.size()) return;
+        Music currentMusic = playlist.get(currentIndex);
+        boolean willLike = !currentMusic.isLiked();
+        // 动画参数
+        float startScale = 1.0f;
+        float midScale = willLike ? 1.2f : 0.8f;
+        float endScale = 1.0f;
+        long duration = 1000;
+        // 动画：缩放+旋转
+        ObjectAnimator scaleX1 = ObjectAnimator.ofFloat(btnFavorite, "scaleX", startScale, midScale);
+        ObjectAnimator scaleY1 = ObjectAnimator.ofFloat(btnFavorite, "scaleY", startScale, midScale);
+        ObjectAnimator scaleX2 = ObjectAnimator.ofFloat(btnFavorite, "scaleX", midScale, endScale);
+        ObjectAnimator scaleY2 = ObjectAnimator.ofFloat(btnFavorite, "scaleY", midScale, endScale);
+        ObjectAnimator rotation = ObjectAnimator.ofFloat(btnFavorite, "rotationY", 0f, 360f);
+        scaleX1.setDuration(duration/2);
+        scaleY1.setDuration(duration/2);
+        scaleX2.setDuration(duration/2);
+        scaleY2.setDuration(duration/2);
+        rotation.setDuration(duration);
+        // 动画组合
+        android.animation.AnimatorSet set = new android.animation.AnimatorSet();
+        set.play(scaleX1).with(scaleY1).with(rotation);
+        set.play(scaleX2).with(scaleY2).after(scaleX1);
+        set.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(android.animation.Animator animation) {
+                // 切换本地收藏状态
+                MusicDataManager.getInstance().toggleFavorite(currentMusic);
+                // 刷新UI
+                updateFavoriteButton(currentMusic.isLiked());
+                String message = currentMusic.isLiked() ? "已收藏" : "取消收藏";
+                Toast.makeText(MusicPlayerActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+        set.start();
+    }
+    
+    private void updateFavoriteButton(boolean isLiked) {
+        if (isLiked) {
+            btnFavorite.setImageResource(R.drawable.ic_favorite);
+        } else {
+            btnFavorite.setImageResource(R.drawable.ic_favorite_border);
+        }
     }
     
     private void updateMusicInfo(Music music) {
@@ -313,6 +414,9 @@ public class MusicPlayerActivity extends AppCompatActivity {
         
         // 开始进度更新
         startProgressUpdate();
+        
+        // 更新收藏按钮
+        updateFavoriteButton(music.isLiked());
     }
     
     private void updateBackgroundColor(Music music) {
@@ -411,6 +515,63 @@ public class MusicPlayerActivity extends AppCompatActivity {
                 }
             })
             .start();
+    }
+    
+    private void showPlaylistDialog() {
+        if (musicPlayer == null || musicPlayer.getCurrentPlaylist() == null) return;
+        List<Music> playlist = new ArrayList<>(musicPlayer.getCurrentPlaylist());
+        BottomSheetDialog dialog = new BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.layout_dialog_playlist, null);
+        dialog.setContentView(dialogView);
+        TextView tvTitle = dialogView.findViewById(R.id.tv_playlist_title);
+        TextView tvCount = dialogView.findViewById(R.id.tv_playlist_count);
+        RecyclerView rv = dialogView.findViewById(R.id.rv_playlist);
+        tvTitle.setText("播放列表");
+        tvCount.setText(playlist.size() + "首");
+        rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        PlaylistDialogAdapter adapter = new PlaylistDialogAdapter(playlist, musicPlayer.getCurrentPlaylist());
+        rv.setAdapter(adapter);
+        adapter.setOnItemActionListener(new PlaylistDialogAdapter.OnItemActionListener() {
+            @Override
+            public void onDelete(Music music, int position) {
+                boolean isCurrent = (musicPlayer.getCurrentMusic() != null && musicPlayer.getCurrentMusic().getId().equals(music.getId()));
+                playlist.remove(position);
+                musicPlayer.getCurrentPlaylist().remove(music);
+                adapter.notifyItemRemoved(position);
+                tvCount.setText(playlist.size() + "首");
+                if (playlist.isEmpty()) {
+                    dialog.dismiss();
+                    finish();
+                    return;
+                }
+                if (isCurrent) {
+                    // 删除当前播放
+                    int playMode = musicPlayer.getPlayMode();
+                    if (playMode == 0 || playMode == 1) { // 顺序/单曲循环
+                        int nextIndex = position;
+                        if (nextIndex >= playlist.size()) nextIndex = 0;
+                        musicPlayer.setPlaylist(playlist);
+                        musicPlayer.play(playlist.get(nextIndex));
+                        updateMusicInfo(playlist.get(nextIndex));
+                    } else if (playMode == 2) { // 随机
+                        int nextIndex = new java.util.Random().nextInt(playlist.size());
+                        musicPlayer.setPlaylist(playlist);
+                        musicPlayer.play(playlist.get(nextIndex));
+                        updateMusicInfo(playlist.get(nextIndex));
+                    }
+                } else {
+                    musicPlayer.setPlaylist(playlist);
+                }
+            }
+            @Override
+            public void onPlay(Music music, int position) {
+                musicPlayer.setPlaylist(playlist);
+                musicPlayer.play(music);
+                updateMusicInfo(music);
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
     
     @Override

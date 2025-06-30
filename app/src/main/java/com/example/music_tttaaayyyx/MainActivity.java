@@ -1,12 +1,14 @@
 package com.example.music_tttaaayyyx;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,12 +43,17 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvCurrentTitle;
     private TextView tvCurrentArtist;
     private ImageButton btnPlayPause;
-    private ImageButton btnNext;
+    private ImageButton btnPlaylist;
     
     private List<HomePageResponse.HomePageInfo> homePageData = new ArrayList<>();
     private int currentPage = 1;
     private boolean isLoading = false;
     private boolean hasMoreData = true;
+
+    private SeekBar seekBarControl;
+    private Handler progressHandler = new Handler(Looper.getMainLooper());
+    private boolean isUserSeeking = false;
+    private Runnable progressRunnable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +66,8 @@ public class MainActivity extends AppCompatActivity {
         initViews();
         setupListeners();
         loadHomePageData(true);
+        // 启动进度条刷新
+        startProgressUpdate();
     }
 
     private void initViews() {
@@ -72,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
         tvCurrentTitle = findViewById(R.id.tv_current_title);
         tvCurrentArtist = findViewById(R.id.tv_current_artist);
         btnPlayPause = findViewById(R.id.btn_play_pause);
-        btnNext = findViewById(R.id.btn_next);
+        btnPlaylist = findViewById(R.id.btn_playlist);
         
         // 初始化播放控制栏状态 - 隐藏初始文本
         tvCurrentTitle.setText("");
@@ -89,6 +98,9 @@ public class MainActivity extends AppCompatActivity {
         
         // 设置Banner自动轮播
         setupBannerAutoScroll();
+
+        // 新增进度条初始化
+        seekBarControl = findViewById(R.id.seek_bar_control);
     }
 
     private void setupListeners() {
@@ -161,11 +173,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // 下一首按钮点击事件
-        btnNext.setOnClickListener(new View.OnClickListener() {
+        // 播放列表按钮点击事件
+        btnPlaylist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                playNext();
+                showPlaylistDialog();
             }
         });
         
@@ -182,6 +194,29 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(MainActivity.this, "请先选择一首音乐", Toast.LENGTH_SHORT).show();
                 }
+            }
+        });
+
+        // 进度条拖动监听
+        seekBarControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                // 拖动时不立即处理，松手时处理
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isUserSeeking = true;
+            }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                int max = seekBar.getMax();
+                int seekTo = 0;
+                MusicPlayer player = MusicPlayer.getInstance();
+                if (player.getCurrentMusic() != null && player.getDuration() > 0) {
+                    seekTo = (int) (player.getDuration() * (seekBar.getProgress() / (float) max));
+                    player.seekTo(seekTo);
+                }
+                isUserSeeking = false;
             }
         });
     }
@@ -295,6 +330,58 @@ public class MainActivity extends AppCompatActivity {
         
         // 更新音乐列表
         musicAdapter.updateData(filteredData);
+
+        // 首次打开App，随机选择一个模块音乐播放
+        SharedPreferences prefs = getSharedPreferences("music_app_prefs", MODE_PRIVATE);
+        boolean hasInit = prefs.getBoolean("has_init_random_play", false);
+        if (!hasInit) {
+            List<HomePageResponse.HomePageInfo> modules = new ArrayList<>();
+            if (horizontalInfo != null && horizontalInfo.getMusicInfoList() != null && !horizontalInfo.getMusicInfoList().isEmpty()) {
+                modules.add(horizontalInfo);
+            }
+            if (singleColumnInfo != null && singleColumnInfo.getMusicInfoList() != null && !singleColumnInfo.getMusicInfoList().isEmpty()) {
+                modules.add(singleColumnInfo);
+            }
+            if (twoColumnInfo != null && twoColumnInfo.getMusicInfoList() != null && !twoColumnInfo.getMusicInfoList().isEmpty()) {
+                modules.add(twoColumnInfo);
+            }
+            if (!modules.isEmpty()) {
+                int moduleIndex = (int) (Math.random() * modules.size());
+                HomePageResponse.HomePageInfo selectedModule = modules.get(moduleIndex);
+                List<HomePageResponse.MusicInfo> musicList = selectedModule.getMusicInfoList();
+                if (musicList != null && !musicList.isEmpty()) {
+                    int musicIndex = (int) (Math.random() * musicList.size());
+                    HomePageResponse.MusicInfo selectedMusic = musicList.get(musicIndex);
+                    // 将该模块所有音乐转为本地Music对象
+                    List<Music> localList = new ArrayList<>();
+                    for (HomePageResponse.MusicInfo info : musicList) {
+                        localList.add(convertToLocalMusic(info));
+                    }
+                    // 设置播放列表
+                    MusicPlayer.getInstance().setPlaylist(localList);
+                    // 播放随机选中的音乐
+                    MusicPlayer.getInstance().play(localList.get(musicIndex));
+                    // 更新悬浮ViewUI
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            tvCurrentTitle.setText(localList.get(musicIndex).getTitle());
+                            tvCurrentArtist.setText(localList.get(musicIndex).getArtist());
+                            btnPlayPause.setImageResource(R.drawable.ic_pause);
+                            if (localList.get(musicIndex).getCoverUrl() != null && !localList.get(musicIndex).getCoverUrl().isEmpty()) {
+                                Glide.with(MainActivity.this)
+                                        .load(localList.get(musicIndex).getCoverUrl())
+                                        .placeholder(R.drawable.placeholder_music)
+                                        .error(R.drawable.placeholder_music)
+                                        .into(ivCurrentCover);
+                            }
+                        }
+                    });
+                    // 标记已初始化
+                    prefs.edit().putBoolean("has_init_random_play", true).apply();
+                }
+            }
+        }
     }
 
     private HomePageResponse.HomePageInfo findModuleByStyle(List<HomePageResponse.HomePageInfo> data, int style) {
@@ -384,20 +471,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void playNext() {
-        MusicPlayer player = MusicPlayer.getInstance();
-        if (player.getCurrentPlaylist() == null || player.getCurrentPlaylist().isEmpty()) {
-            Toast.makeText(this, "播放列表为空", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        player.next();
-        Music currentMusic = player.getCurrentMusic();
-        if (currentMusic != null) {
-            Toast.makeText(this, "正在播放: " + currentMusic.getTitle(), Toast.LENGTH_SHORT).show();
-        }
-    }
-
     private void addToPlaylist(HomePageResponse.MusicInfo music) {
         // 将网络数据转换为本地Music对象
         Music localMusic = convertToLocalMusic(music);
@@ -463,13 +536,42 @@ public class MainActivity extends AppCompatActivity {
                         }, 100);
                     }
                 });
+                // 播放状态变化时刷新进度条
+                updateSeekBarProgress();
             }
 
             @Override
             public void onMusicChanged(Music music) {
                 // 音乐变化时不需要额外处理，因为playMusic方法已经处理了UI更新
+                // 切歌时刷新进度条
+                updateSeekBarProgress();
             }
         });
+    }
+
+    private void startProgressUpdate() {
+        progressRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!isUserSeeking) {
+                    updateSeekBarProgress();
+                }
+                progressHandler.postDelayed(this, 500);
+            }
+        };
+        progressHandler.post(progressRunnable);
+    }
+
+    private void updateSeekBarProgress() {
+        MusicPlayer player = MusicPlayer.getInstance();
+        if (player.getCurrentMusic() != null && player.getDuration() > 0) {
+            int position = player.getCurrentPosition();
+            int duration = player.getDuration();
+            int progress = (int) (position * 1.0f / duration * seekBarControl.getMax());
+            seekBarControl.setProgress(progress);
+        } else {
+            seekBarControl.setProgress(0);
+        }
     }
 
     @Override
@@ -477,5 +579,76 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         // 释放MediaPlayer资源
         MusicPlayer.getInstance().release();
+        // 停止进度条刷新
+        if (progressRunnable != null) {
+            progressHandler.removeCallbacks(progressRunnable);
+        }
+    }
+
+    // 新增：首页弹出播放列表弹窗
+    private void showPlaylistDialog() {
+        MusicPlayer player = MusicPlayer.getInstance();
+        if (player.getCurrentPlaylist() == null || player.getCurrentPlaylist().isEmpty()) {
+            Toast.makeText(this, "播放列表为空", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.layout_dialog_playlist, null);
+        dialog.setContentView(dialogView);
+        TextView tvTitle = dialogView.findViewById(R.id.tv_playlist_title);
+        TextView tvCount = dialogView.findViewById(R.id.tv_playlist_count);
+        TextView tvMode = dialogView.findViewById(R.id.tv_playlist_mode);
+        RecyclerView rv = dialogView.findViewById(R.id.rv_playlist);
+        tvTitle.setText("播放列表");
+        tvCount.setText(player.getCurrentPlaylist().size() + "首");
+        // 显示当前播放模式
+        int playMode = player.getPlayMode();
+        String modeText = "顺序播放";
+        if (playMode == 1) modeText = "单曲循环";
+        else if (playMode == 2) modeText = "随机播放";
+        tvMode.setText(modeText);
+        rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        com.example.music_tttaaayyyx.adapter.PlaylistDialogAdapter adapter = new com.example.music_tttaaayyyx.adapter.PlaylistDialogAdapter(new ArrayList<>(player.getCurrentPlaylist()), player.getCurrentPlaylist());
+        rv.setAdapter(adapter);
+        adapter.setOnItemActionListener(new com.example.music_tttaaayyyx.adapter.PlaylistDialogAdapter.OnItemActionListener() {
+            @Override
+            public void onDelete(com.example.music_tttaaayyyx.Music music, int position) {
+                List<com.example.music_tttaaayyyx.Music> playlist = player.getCurrentPlaylist();
+                boolean isCurrent = (player.getCurrentMusic() != null && player.getCurrentMusic().getId().equals(music.getId()));
+                playlist.remove(music);
+                adapter.notifyItemRemoved(position);
+                tvCount.setText(playlist.size() + "首");
+                if (playlist.isEmpty()) {
+                    dialog.dismiss();
+                    tvCurrentTitle.setText("");
+                    tvCurrentArtist.setText("");
+                    ivCurrentCover.setImageResource(R.drawable.placeholder_music);
+                    btnPlayPause.setImageResource(R.drawable.ic_play);
+                    return;
+                }
+                if (isCurrent) {
+                    int playMode = player.getPlayMode();
+                    if (playMode == 0 || playMode == 1) {
+                        int nextIndex = position;
+                        if (nextIndex >= playlist.size()) nextIndex = 0;
+                        player.setPlaylist(playlist);
+                        player.play(playlist.get(nextIndex));
+                    } else if (playMode == 2) {
+                        int nextIndex = new java.util.Random().nextInt(playlist.size());
+                        player.setPlaylist(playlist);
+                        player.play(playlist.get(nextIndex));
+                    }
+                } else {
+                    player.setPlaylist(playlist);
+                }
+            }
+            @Override
+            public void onPlay(com.example.music_tttaaayyyx.Music music, int position) {
+                player.setPlaylist(player.getCurrentPlaylist());
+                player.play(music);
+                dialog.dismiss();
+            }
+        });
+        dialog.show();
     }
 } 

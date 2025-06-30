@@ -116,8 +116,8 @@
 
             <ImageButton
                 android:id="@+id/btn_previous"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginEnd="16dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/previous"
@@ -125,16 +125,16 @@
 
             <ImageButton
                 android:id="@+id/btn_play_pause"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
-                android:background="@drawable/circle_background"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/play_pause"
                 android:src="@drawable/ic_play" />
 
             <ImageButton
                 android:id="@+id/btn_next"
-                android:layout_width="72dp"
-                android:layout_height="72dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
                 android:background="?attr/selectableItemBackgroundBorderless"

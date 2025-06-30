@@ -161,14 +161,28 @@
                 android:src="@drawable/ic_play" />
 
             <ImageButton
-                android:id="@+id/btn_next"
+                android:id="@+id/btn_playlist"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="@string/next"
-                android:src="@drawable/ic_play" />
+                android:contentDescription="播放列表"
+                android:src="@drawable/ic_lyrics" />
 
         </LinearLayout>
+
+        <!-- 播放进度条 -->
+        <SeekBar
+            android:id="@+id/seek_bar_control"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:progress="0"
+            android:max="1000"
+            android:thumbTint="@color/primary_color"
+            android:progressTint="@color/primary_color"
+            android:splitTrack="false"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"/>
 
     </androidx.cardview.widget.CardView>
 
