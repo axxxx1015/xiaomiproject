@@ -421,7 +421,7 @@ public class MusicPlayerActivity extends AppCompatActivity {
     
     private void updateBackgroundColor(Music music) {
         if (music == null || music.getCoverUrl() == null) return;
-        
+        if (isFinishing() || isDestroyed()) return;
         Glide.with(this)
             .asBitmap()
             .load(music.getCoverUrl())
@@ -435,7 +435,6 @@ public class MusicPlayerActivity extends AppCompatActivity {
                         }
                     });
                 }
-                
                 @Override
                 public void onLoadCleared(Drawable placeholder) {}
             });

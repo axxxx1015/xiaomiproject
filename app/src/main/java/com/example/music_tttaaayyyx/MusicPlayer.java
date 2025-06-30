@@ -248,6 +248,9 @@ public class MusicPlayer {
         if (!playlist.isEmpty()) {
             this.currentMusic = playlist.get(0);
         }
+        if (playbackListener != null && currentMusic != null) {
+            playbackListener.onMusicChanged(currentMusic);
+        }
     }
 
     // 设置播放模式

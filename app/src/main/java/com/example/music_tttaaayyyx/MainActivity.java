@@ -398,43 +398,33 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "音乐数据异常，无法播放", Toast.LENGTH_SHORT).show();
             return;
         }
-        // 将网络数据转换为本地Music对象
         Music localMusic = convertToLocalMusic(music);
-        
-        // 获取当前模块的所有音乐作为播放列表
-        List<Music> currentModuleMusic = new ArrayList<>();
-        for (HomePageResponse.HomePageInfo module : homePageData) {
-            if (module.getMusicInfoList() != null) {
-                for (HomePageResponse.MusicInfo moduleMusic : module.getMusicInfoList()) {
-                    currentModuleMusic.add(convertToLocalMusic(moduleMusic));
-                }
-            }
+        MusicPlayer player = MusicPlayer.getInstance();
+        List<Music> playList = player.getCurrentPlaylist();
+        if (playList == null) {
+            playList = new ArrayList<>();
+            player.setPlaylist(playList);
         }
-        
-        // 设置播放列表
-        MusicPlayer.getInstance().setPlaylist(currentModuleMusic);
-        
-        // 找到当前音乐在播放列表中的索引
-        int currentIndex = 0;
-        for (int i = 0; i < currentModuleMusic.size(); i++) {
-            if (currentModuleMusic.get(i).getId().equals(localMusic.getId())) {
-                currentIndex = i;
+        int index = -1;
+        for (int i = 0; i < playList.size(); i++) {
+            if (playList.get(i).getId().equals(localMusic.getId())) {
+                index = i;
                 break;
             }
         }
-        
+        if (index == -1) {
+            playList.add(localMusic);
+            index = playList.size() - 1;
+        }
+        player.setPlaylist(playList);
+        player.play(playList.get(index));
         // 立即更新播放控制栏UI（在主线程）
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                // 更新音乐信息
                 tvCurrentTitle.setText(localMusic.getTitle());
                 tvCurrentArtist.setText(localMusic.getArtist());
-                
-                // 先设置为播放图标
                 btnPlayPause.setImageResource(R.drawable.ic_pause);
-                
-                // 加载音乐封面
                 if (localMusic.getCoverUrl() != null && !localMusic.getCoverUrl().isEmpty()) {
                     Glide.with(MainActivity.this)
                             .load(localMusic.getCoverUrl())
@@ -444,16 +434,9 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-        
-        // 使用MusicPlayer播放音乐
-        MusicPlayer.getInstance().play(localMusic);
-        
-        // 增加播放次数
         MusicDataManager.getInstance().incrementPlayCount(localMusic);
-        
-        // 跳转到音乐播放页面
         Intent intent = new Intent(MainActivity.this, MusicPlayerActivity.class);
-        intent.putExtra("current_index", currentIndex);
+        intent.putExtra("current_index", index);
         startActivity(intent);
     }
 
@@ -478,7 +461,6 @@ public class MainActivity extends AppCompatActivity {
     private void addToPlaylist(HomePageResponse.MusicInfo music) {
         // 将网络数据转换为本地Music对象
         Music localMusic = convertToLocalMusic(music);
-        
         // 添加到默认播放列表（这里添加到"我的最爱"播放列表）
         List<Playlist> playlists = MusicDataManager.getInstance().getUserPlaylists();
         if (!playlists.isEmpty()) {
@@ -492,6 +474,30 @@ public class MainActivity extends AppCompatActivity {
             newPlaylist.addMusic(localMusic);
             Toast.makeText(this, 
                 "已创建播放列表并添加《" + music.getMusicName() + "》", Toast.LENGTH_SHORT).show();
+        }
+        // 同步到MusicPlayer的播放队列
+        MusicPlayer player = MusicPlayer.getInstance();
+        List<Music> playList = player.getCurrentPlaylist();
+        if (playList == null) {
+            playList = new ArrayList<>();
+            player.setPlaylist(playList);
+        }
+        boolean exists = false;
+        for (Music m : playList) {
+            if (m.getId().equals(localMusic.getId())) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            playList.add(localMusic);
+            Toast.makeText(this, "已将《" + music.getMusicName() + "》添加到当前播放列表", Toast.LENGTH_SHORT).show();
+            // 如果这是第一首，直接播放
+            if (playList.size() == 1) {
+                player.play(localMusic);
+            }
+        } else {
+            Toast.makeText(this, "当前播放列表已包含该歌曲", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -546,7 +552,23 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onMusicChanged(Music music) {
-                // 音乐变化时不需要额外处理，因为playMusic方法已经处理了UI更新
+                // 6.30新增：刷新悬浮View音乐信息
+                runOnUiThread(() -> {
+                    if (music != null) {
+                        tvCurrentTitle.setText(music.getTitle());
+                        tvCurrentArtist.setText(music.getArtist());
+                        btnPlayPause.setImageResource(MusicPlayer.getInstance().isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+                        if (music.getCoverUrl() != null && !music.getCoverUrl().isEmpty()) {
+                            Glide.with(MainActivity.this)
+                                    .load(music.getCoverUrl())
+                                    .placeholder(R.drawable.placeholder_music)
+                                    .error(R.drawable.placeholder_music)
+                                    .into(ivCurrentCover);
+                        } else {
+                            ivCurrentCover.setImageResource(R.drawable.placeholder_music);
+                        }
+                    }
+                });
                 // 切歌时刷新进度条
                 updateSeekBarProgress();
             }
